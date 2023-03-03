@@ -2,36 +2,26 @@ package openapi3
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
 	"net/url"
-	"sort"
 	"strings"
+
+	"github.com/jeffy-mathew/kin-openapi/jsoninfo"
 )
 
-// Servers is specified by OpenAPI/Swagger standard version 3.
+// Servers is specified by OpenAPI/Swagger standard version 3.0.
 type Servers []*Server
 
-// Validate returns an error if Servers does not comply with the OpenAPI spec.
-func (servers Servers) Validate(ctx context.Context, opts ...ValidationOption) error {
-	ctx = WithValidationOptions(ctx, opts...)
-
-	for _, v := range servers {
+// Validate ensures servers are per the OpenAPIv3 specification.
+func (value Servers) Validate(ctx context.Context) error {
+	for _, v := range value {
 		if err := v.Validate(ctx); err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-// BasePath returns the base path of the first server in the list, or /.
-func (servers Servers) BasePath() (string, error) {
-	for _, server := range servers {
-		return server.BasePath()
-	}
-	return "/", nil
 }
 
 func (servers Servers) MatchURL(parsedURL *url.URL) (*Server, []string, string) {
@@ -48,69 +38,20 @@ func (servers Servers) MatchURL(parsedURL *url.URL) (*Server, []string, string) 
 	return nil, nil, ""
 }
 
-// Server is specified by OpenAPI/Swagger standard version 3.
-// See https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#server-object
+// Server is specified by OpenAPI/Swagger standard version 3.0.
 type Server struct {
-	Extensions map[string]interface{} `json:"-" yaml:"-"`
-
-	URL         string                     `json:"url" yaml:"url"` // Required
+	ExtensionProps
+	URL         string                     `json:"url" yaml:"url"`
 	Description string                     `json:"description,omitempty" yaml:"description,omitempty"`
 	Variables   map[string]*ServerVariable `json:"variables,omitempty" yaml:"variables,omitempty"`
 }
 
-// BasePath returns the base path extracted from the default values of variables, if any.
-// Assumes a valid struct (per Validate()).
-func (server *Server) BasePath() (string, error) {
-	if server == nil {
-		return "/", nil
-	}
-
-	uri := server.URL
-	for name, svar := range server.Variables {
-		uri = strings.ReplaceAll(uri, "{"+name+"}", svar.Default)
-	}
-
-	u, err := url.ParseRequestURI(uri)
-	if err != nil {
-		return "", err
-	}
-
-	if bp := u.Path; bp != "" {
-		return bp, nil
-	}
-
-	return "/", nil
+func (server *Server) MarshalJSON() ([]byte, error) {
+	return jsoninfo.MarshalStrictStruct(server)
 }
 
-// MarshalJSON returns the JSON encoding of Server.
-func (server Server) MarshalJSON() ([]byte, error) {
-	m := make(map[string]interface{}, 3+len(server.Extensions))
-	for k, v := range server.Extensions {
-		m[k] = v
-	}
-	m["url"] = server.URL
-	if x := server.Description; x != "" {
-		m["description"] = x
-	}
-	if x := server.Variables; len(x) != 0 {
-		m["variables"] = x
-	}
-	return json.Marshal(m)
-}
-
-// UnmarshalJSON sets Server to a copy of data.
 func (server *Server) UnmarshalJSON(data []byte) error {
-	type ServerBis Server
-	var x ServerBis
-	if err := json.Unmarshal(data, &x); err != nil {
-		return err
-	}
-	_ = json.Unmarshal(data, &x.Extensions)
-	delete(x.Extensions, "url")
-	delete(x.Extensions, "description")
-	delete(x.Extensions, "variables")
-	*server = Server(x)
-	return nil
+	return jsoninfo.UnmarshalStrictStruct(data, server)
 }
 
 func (server Server) ParameterNames() ([]string, error) {
@@ -184,95 +125,51 @@ func (server Server) MatchRawURL(input string) ([]string, string, bool) {
 	return params, input, true
 }
 
-// Validate returns an error if Server does not comply with the OpenAPI spec.
-func (server *Server) Validate(ctx context.Context, opts ...ValidationOption) (err error) {
-	ctx = WithValidationOptions(ctx, opts...)
-
-	if server.URL == "" {
+func (value *Server) Validate(ctx context.Context) (err error) {
+	if value.URL == "" {
 		return errors.New("value of url must be a non-empty string")
 	}
-
-	opening, closing := strings.Count(server.URL, "{"), strings.Count(server.URL, "}")
+	opening, closing := strings.Count(value.URL, "{"), strings.Count(value.URL, "}")
 	if opening != closing {
 		return errors.New("server URL has mismatched { and }")
 	}
-
-	if opening != len(server.Variables) {
+	if opening != len(value.Variables) {
 		return errors.New("server has undeclared variables")
 	}
-
-	variables := make([]string, 0, len(server.Variables))
-	for name := range server.Variables {
-		variables = append(variables, name)
-	}
-	sort.Strings(variables)
-	for _, name := range variables {
-		v := server.Variables[name]
-		if !strings.Contains(server.URL, "{"+name+"}") {
+	for name, v := range value.Variables {
+		if !strings.Contains(value.URL, fmt.Sprintf("{%s}", name)) {
 			return errors.New("server has undeclared variables")
 		}
 		if err = v.Validate(ctx); err != nil {
 			return
 		}
 	}
-
-	return validateExtensions(ctx, server.Extensions)
+	return
 }
 
-// ServerVariable is specified by OpenAPI/Swagger standard version 3.
-// See https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#server-variable-object
+// ServerVariable is specified by OpenAPI/Swagger standard version 3.0.
 type ServerVariable struct {
-	Extensions map[string]interface{} `json:"-" yaml:"-"`
-
+	ExtensionProps
 	Enum        []string `json:"enum,omitempty" yaml:"enum,omitempty"`
 	Default     string   `json:"default,omitempty" yaml:"default,omitempty"`
 	Description string   `json:"description,omitempty" yaml:"description,omitempty"`
 }
 
-// MarshalJSON returns the JSON encoding of ServerVariable.
-func (serverVariable ServerVariable) MarshalJSON() ([]byte, error) {
-	m := make(map[string]interface{}, 4+len(serverVariable.Extensions))
-	for k, v := range serverVariable.Extensions {
-		m[k] = v
-	}
-	if x := serverVariable.Enum; len(x) != 0 {
-		m["enum"] = x
-	}
-	if x := serverVariable.Default; x != "" {
-		m["default"] = x
-	}
-	if x := serverVariable.Description; x != "" {
-		m["description"] = x
-	}
-	return json.Marshal(m)
+func (serverVariable *ServerVariable) MarshalJSON() ([]byte, error) {
+	return jsoninfo.MarshalStrictStruct(serverVariable)
 }
 
-// UnmarshalJSON sets ServerVariable to a copy of data.
 func (serverVariable *ServerVariable) UnmarshalJSON(data []byte) error {
-	type ServerVariableBis ServerVariable
-	var x ServerVariableBis
-	if err := json.Unmarshal(data, &x); err != nil {
-		return err
-	}
-	_ = json.Unmarshal(data, &x.Extensions)
-	delete(x.Extensions, "enum")
-	delete(x.Extensions, "default")
-	delete(x.Extensions, "description")
-	*serverVariable = ServerVariable(x)
-	return nil
+	return jsoninfo.UnmarshalStrictStruct(data, serverVariable)
 }
 
-// Validate returns an error if ServerVariable does not comply with the OpenAPI spec.
-func (serverVariable *ServerVariable) Validate(ctx context.Context, opts ...ValidationOption) error {
-	ctx = WithValidationOptions(ctx, opts...)
-
-	if serverVariable.Default == "" {
-		data, err := serverVariable.MarshalJSON()
+func (value *ServerVariable) Validate(ctx context.Context) error {
+	if value.Default == "" {
+		data, err := value.MarshalJSON()
 		if err != nil {
 			return err
 		}
 		return fmt.Errorf("field default is required in %s", data)
 	}
-
-	return validateExtensions(ctx, serverVariable.Extensions)
+	return nil
 }

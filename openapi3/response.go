@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/go-openapi/jsonpointer"
+	"github.com/jeffy-mathew/kin-openapi/jsoninfo"
 )
 
 // Responses is specified by OpenAPI/Swagger 3.0 standard.

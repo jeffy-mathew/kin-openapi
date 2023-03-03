@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/go-openapi/jsonpointer"
+	"github.com/jeffy-mathew/kin-openapi/jsoninfo"
 )
 
 type ParametersMap map[string]*ParameterRef

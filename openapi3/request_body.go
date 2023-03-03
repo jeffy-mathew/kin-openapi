@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/go-openapi/jsonpointer"
+	"github.com/jeffy-mathew/kin-openapi/jsoninfo"
 )
 
 type RequestBodies map[string]*RequestBodyRef

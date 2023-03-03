@@ -14,10 +14,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jeffy-mathew/kin-openapi/openapi3"
+	legacyrouter "github.com/jeffy-mathew/kin-openapi/routers/legacy"
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	legacyrouter "github.com/getkin/kin-openapi/routers/legacy"
 )
 
 type ExampleRequest struct {
@@ -63,10 +62,9 @@ func TestFilter(t *testing.T) {
 					Parameters: openapi3.Parameters{
 						{
 							Value: &openapi3.Parameter{
-								In:       "path",
-								Name:     "pathArg",
-								Schema:   openapi3.NewStringSchema().WithMaxLength(2).NewRef(),
-								Required: true,
+								In:     "path",
+								Name:   "pathArg",
+								Schema: openapi3.NewStringSchema().WithMaxLength(2).NewRef(),
 							},
 						},
 						{
@@ -198,7 +196,7 @@ func TestFilter(t *testing.T) {
 		}
 		err = ValidateResponse(context.Background(), responseValidationInput)
 		require.NoError(t, err)
-		return nil
+		return err
 	}
 	expect := func(req ExampleRequest, resp ExampleResponse) error {
 		return expectWithDecoder(req, resp, nil)
@@ -207,12 +205,13 @@ func TestFilter(t *testing.T) {
 	resp := ExampleResponse{
 		Status: 200,
 	}
-
 	// Test paths
+
 	req := ExampleRequest{
 		Method: "POST",
 		URL:    "http://example.com/api/prefix/v/suffix",
 	}
+
 	err = expect(req, resp)
 	require.NoError(t, err)
 
@@ -327,7 +326,7 @@ func TestFilter(t *testing.T) {
 	// enough.
 	req = ExampleRequest{
 		Method: "POST",
-		URL:    `http://example.com/api/prefix/v/suffix?contentArg={"name":"bob", "id":"a"}`,
+		URL:    "http://example.com/api/prefix/v/suffix?contentArg={\"name\":\"bob\", \"id\":\"a\"}",
 	}
 	err = expect(req, resp)
 	require.NoError(t, err)
@@ -335,7 +334,7 @@ func TestFilter(t *testing.T) {
 	// Now it should fail due the ID being too long
 	req = ExampleRequest{
 		Method: "POST",
-		URL:    `http://example.com/api/prefix/v/suffix?contentArg={"name":"bob", "id":"EXCEEDS_MAX_LENGTH"}`,
+		URL:    "http://example.com/api/prefix/v/suffix?contentArg={\"name\":\"bob\", \"id\":\"EXCEEDS_MAX_LENGTH\"}",
 	}
 	err = expect(req, resp)
 	require.IsType(t, &RequestError{}, err)
@@ -350,7 +349,7 @@ func TestFilter(t *testing.T) {
 
 	req = ExampleRequest{
 		Method: "POST",
-		URL:    `http://example.com/api/prefix/v/suffix?contentArg2={"name":"bob", "id":"a"}`,
+		URL:    "http://example.com/api/prefix/v/suffix?contentArg2={\"name\":\"bob\", \"id\":\"a\"}",
 	}
 	err = expectWithDecoder(req, resp, customDecoder)
 	require.NoError(t, err)
@@ -358,7 +357,7 @@ func TestFilter(t *testing.T) {
 	// Now it should fail due the ID being too long
 	req = ExampleRequest{
 		Method: "POST",
-		URL:    `http://example.com/api/prefix/v/suffix?contentArg2={"name":"bob", "id":"EXCEEDS_MAX_LENGTH"}`,
+		URL:    "http://example.com/api/prefix/v/suffix?contentArg2={\"name\":\"bob\", \"id\":\"EXCEEDS_MAX_LENGTH\"}",
 	}
 	err = expectWithDecoder(req, resp, customDecoder)
 	require.IsType(t, &RequestError{}, err)
@@ -541,7 +540,7 @@ func TestRootSecurityRequirementsAreUsedIfNotProvidedAtTheOperationLevel(t *test
 				securitySchemes[1].Name: {},
 			},
 		},
-		Components: &openapi3.Components{
+		Components: openapi3.Components{
 			SecuritySchemes: map[string]*openapi3.SecuritySchemeRef{},
 		},
 	}
@@ -670,7 +669,7 @@ func TestAnySecurityRequirementMet(t *testing.T) {
 			Version: "0.1",
 		},
 		Paths: map[string]*openapi3.PathItem{},
-		Components: &openapi3.Components{
+		Components: openapi3.Components{
 			SecuritySchemes: map[string]*openapi3.SecuritySchemeRef{},
 		},
 	}
@@ -767,7 +766,7 @@ func TestAllSchemesMet(t *testing.T) {
 			Version: "0.1",
 		},
 		Paths: map[string]*openapi3.PathItem{},
-		Components: &openapi3.Components{
+		Components: openapi3.Components{
 			SecuritySchemes: map[string]*openapi3.SecuritySchemeRef{},
 		},
 	}

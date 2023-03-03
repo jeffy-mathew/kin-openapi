@@ -6,10 +6,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/jeffy-mathew/kin-openapi/openapi2"
+	"github.com/jeffy-mathew/kin-openapi/openapi3"
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi2"
-	"github.com/getkin/kin-openapi/openapi3"
 )
 
 func TestIssue440(t *testing.T) {

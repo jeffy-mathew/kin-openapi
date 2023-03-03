@@ -8,6 +8,7 @@ import (
 	"sort"
 
 	"github.com/go-openapi/jsonpointer"
+	"github.com/jeffy-mathew/kin-openapi/jsoninfo"
 )
 
 // MediaType is specified by OpenAPI/Swagger 3.0 standard.

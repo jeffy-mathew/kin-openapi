@@ -19,7 +19,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/jeffy-mathew/kin-openapi/openapi3"
 )
 
 // ParseErrorKind describes a kind of ParseError.
