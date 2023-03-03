@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/getkin/kin-openapi/jsoninfo"
-	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/jeffy-mathew/kin-openapi/jsoninfo"
+	"github.com/jeffy-mathew/kin-openapi/openapi3"
 )
 
 // T is the root of an OpenAPI v2 document

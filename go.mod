@@ -1,6 +1,6 @@
-module github.com/getkin/kin-openapi
+module github.com/jeffy-mathew/kin-openapi
 
-go 1.14
+go 1.16
 
 require (
 	github.com/ghodss/yaml v1.0.0

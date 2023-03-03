@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/getkin/kin-openapi/jsoninfo"
+	"github.com/jeffy-mathew/kin-openapi/jsoninfo"
 )
 
 // Components is specified by OpenAPI/Swagger standard version 3.0.

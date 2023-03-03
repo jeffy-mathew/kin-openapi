@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/getkin/kin-openapi/jsoninfo"
+	"github.com/jeffy-mathew/kin-openapi/jsoninfo"
 )
 
 // T is the root of an OpenAPI v3 document

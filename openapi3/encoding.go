@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/getkin/kin-openapi/jsoninfo"
+	"github.com/jeffy-mathew/kin-openapi/jsoninfo"
 )
 
 // Encoding is specified by OpenAPI/Swagger 3.0 standard.

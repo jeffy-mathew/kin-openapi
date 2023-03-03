@@ -1,6 +1,6 @@
 package openapi3
 
-import "github.com/getkin/kin-openapi/jsoninfo"
+import "github.com/jeffy-mathew/kin-openapi/jsoninfo"
 
 // Tags is specified by OpenAPI/Swagger 3.0 standard.
 type Tags []*Tag

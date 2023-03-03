@@ -5,8 +5,8 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/getkin/kin-openapi/jsoninfo"
 	"github.com/go-openapi/jsonpointer"
+	"github.com/jeffy-mathew/kin-openapi/jsoninfo"
 )
 
 // Operation represents "operation" specified by" OpenAPI/Swagger 3.0 standard.
